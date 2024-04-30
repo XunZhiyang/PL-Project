@@ -191,15 +191,23 @@ Proof.
     + apply check_instance_disjoint.
 Qed.
 
-
-(* maybe not very useful ...*)
-Lemma valid_solution_requires_transitions_per_k :
+(* Lemma: A valid solution must have transitions at the ends of the binary sequence *)
+Lemma valid_solution_requires_transitions_at_ends :
   forall n, let np := generate_necklace_instance n in
-            forall sol : solution, forall k : nat,
-              valid_solution np sol -> In k (seq 0 n) -> (nth (2*k) sol.(binary_seq)) <> (nth (2*k+1) sol.(binary_seq)).
-Proof.
+            forall sol : solution,
+              valid_solution np sol -> (nth (2 * n - 2) sol.(binary_seq) false) <> (nth (2 * n - 1) sol.(binary_seq) false).
 Admitted.
 
+Lemma prefix_of_valid_solution_are_valid :
+  forall n, let np := generate_necklace_instance (S n) in
+            forall sol : solution,
+              valid_solution np sol -> valid_solution (generate_necklace_instance n) {| binary_seq := firstn (2 * n) sol.(binary_seq) |}.
+Admitted.
+
+Proposition transition_count_of_list_with_one_more_transition :
+  forall l: list bool, let s := length l in 
+  s >= 2 -> transition_count l >= (transition_count (firstn (s-2) l)) + (if Bool.eqb (nth (s-2) l false) (nth (s-1) l false) then 0 else 1).
+Admitted.
 
 (* Theorem: Any valid solution for the specific instance must have at least n transitions *)
 Theorem valid_solution_requires_transitions :
@@ -211,9 +219,14 @@ Proof.
   intros np.
   intros sol.
   intros H.
-  unfold transition_count.
-  destruct binary_seq.
-  - unfold valid_solution in H.
+  induction n.
+  
+  - simpl. lia.
+  - assert (H_prefix: valid_solution (generate_necklace_instance n) {| binary_seq := firstn (2 * n) sol.(binary_seq) |}).
+    { apply prefix_of_valid_solution_are_valid. unfold np in H.  apply H. }
+    assert (H_count: (transition_count (firstn (2 * n) (binary_seq sol))) + 
+    (if Bool.eqb (nth (2 * n - 2) (binary_seq sol) false) (nth (2 * n - 1) (binary_seq sol) false) then 0 else 1) >= S n).
+  
 
 Admitted.
 
