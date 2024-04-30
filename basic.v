@@ -53,16 +53,20 @@ Definition instance_disjoint (np : necklace_problem) : Prop :=
 Definition valid_instance (np : necklace_problem) : Prop :=
   instance_even np /\ instance_union np /\ instance_disjoint np.
 
-(* Check if a given solution is valid for a given necklace problem *)
-Definition valid_solution (np : necklace_problem) (sol : solution) : Prop :=
+
+Definition valid_solution_partition (np : necklace_problem) (sol : solution) : Prop :=
   forall s : list nat, In s (subsets np) ->
     let half_sum := fold_right Nat.add 0 (map (fun i => if nth i (binary_seq sol) false then 1 else 0) s)
     in half_sum = length s / 2.
 
+(* Check if a given solution is valid for a given necklace problem *)
+Definition valid_solution (np : necklace_problem) (sol : solution) : Prop :=
+  valid_solution_partition np sol /\ length (binary_seq sol) = np.(m).
+
+
 (* Generate a specific instance of the necklace problem *)
 Definition generate_necklace_instance (n : nat) : necklace_problem :=
   {| m := 2 * n; subsets := map (fun k => [2 * k; 2 * k + 1]) (seq 0 n) |}.
-
 
 
 Lemma check_instance_even : forall n,
@@ -135,11 +139,32 @@ Proof.
 Qed.
 
 
+(* maybe not very useful ...*)
+Lemma valid_solution_requires_transitions_per_k :
+  forall n, let np := generate_necklace_instance n in
+            forall sol : solution, forall k : nat,
+              valid_solution np sol -> In k (seq 0 n) -> (nth (2*k) sol.(binary_seq)) <> (nth (2*k+1) sol.(binary_seq)).
+Proof.
+Admitted.
+
 
 (* Theorem: Any valid solution for the specific instance must have at least n transitions *)
 Theorem valid_solution_requires_transitions :
   forall n, let np := generate_necklace_instance n in
             forall sol : solution,
               valid_solution np sol -> transition_count (binary_seq sol) >= n.
+Proof.
+  intros n.
+  intros np.
+  intros sol.
+  intros H.
+  unfold transition_count.
+  destruct binary_seq.
+  - unfold valid_solution in H.
+    split H.
+
 Admitted.
+
+
+
 
