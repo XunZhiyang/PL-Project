@@ -165,6 +165,15 @@ Proof.
 
 Admitted.
 
-
-
+(* Theorem: Formal Theorem *)
+Theorem lower_bound_for_necklace_problem :
+ forall n, exists np : necklace_problem, valid_instance np /\
+  forall sol : solution, valid_solution np sol -> transition_count (binary_seq sol) >= n. 
+Proof.
+  intros n.
+  exists (generate_necklace_instance n).
+  split.
+  - apply check_valid_instance.
+  - apply valid_solution_requires_transitions.
+Qed.
 
