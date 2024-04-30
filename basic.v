@@ -207,12 +207,51 @@ Proof.
     + apply check_instance_disjoint.
 Qed.
 
+Lemma stupid_coq : forall n, n > 0 -> n + n - 1 = n + n - 2 + 1.
+Proof.
+  intros n.
+  lia.
+Qed.
+
+
 (* Lemma: A valid solution must have transitions at the ends of the binary sequence *)
 Lemma valid_solution_requires_transitions_at_ends :
   forall n, let np := generate_necklace_instance n in
-            forall sol : solution, let s := length (binary_seq sol) in 
+            forall sol : solution, let s := length (binary_seq sol) in n > 0 ->
               valid_solution np sol -> (nth (s - 2) sol.(binary_seq) false) <> (nth (s - 1) sol.(binary_seq) false).
-Admitted.
+Proof.
+  intros n np sol s Hgreater Hval.
+  destruct Hval as [Hpart Hlen].
+  unfold valid_solution_partition in Hpart.  unfold generate_necklace_instance in np; subst.
+  assert (H: s = np.(m)).
+  { apply Hlen. }
+  assert(np.(m) = 2 * n).
+  { auto. }
+  assert (Hdiff: nth (s-2) (binary_seq sol) false <> nth (s-1) (binary_seq sol) false).
+  { 
+    specialize (Hpart [s - 2; s - 1]).
+    simpl in Hpart.
+    assert (Hin: In [s - 2; s - 1] (subsets np)).
+    { simpl; apply in_map_iff; exists (n - 1); split; [auto| apply in_seq; try lia]. simpl. rewrite H. rewrite H0.
+    simpl.
+    replace (n + 0) with n by lia.
+    replace (n - 1 + 0) with (n-1) by lia.
+    (* rewrite Nat.add_0_r.
+    rewrite Nat.add_0_r. *)
+    (* rewrite <- Nat.add_assoc. *)
+    replace (n - 1 + (n - 1)) with (n + n - 2) by lia.
+    simpl.
+    replace (n + n - 2 + 1) with (n + n - 1). auto. apply stupid_coq. apply Hgreater. }
+    specialize (Hpart Hin).
+    (* unfold half_sum in Hpart. *)
+    (* simpl map in Hpart. *)
+    (* rewrite H in Hpart at 1. *)
+    simpl in Hpart.
+    destruct (nth (s - 2) (binary_seq sol)); destruct (nth (s - 1) (binary_seq sol));
+    lia. (* Based on the calculation for partition *)
+  }
+  exact Hdiff.
+Qed.
 
 Lemma prefix_of_valid_solution_are_valid :
   forall n, let np := generate_necklace_instance (S n) in
