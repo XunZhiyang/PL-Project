@@ -92,10 +92,63 @@ Proof.
     auto.
 Qed.
 
+Proposition mod_2_contradiction : forall x n, x mod 2 <> S (S n).
+Proof.
+  intros x n H.   (* Assume x mod 2 = S (S n) for contradiction *)
+  assert (Hmod: x mod 2 < 2). 
+  { apply Nat.mod_upper_bound. lia. } (* x mod 2 must be less than 2 because the divisor is 2 *)
+  lia. (* Using lia to find contradiction between H and Hmod *)
+Qed.
+
+Proposition x_in_its_generated_pair : forall x,
+  In x [2 * (x / 2); 2 * (x / 2) + 1].
+Proof.
+  intros x.
+  destruct (x mod 2) eqn:E.  (* Destruct based on the parity of x *)
+  - left.  (* Case for even x *)
+    assert (Hx : x = 2 * (x / 2)).  (* Prove that x is twice its half for even x *)
+      { rewrite Nat.div_exact; auto; lia. }
+    rewrite <- Hx. reflexivity.
+  - destruct n. right. (* Case for odd x *)
+    assert (Hx : x = 2 * (x / 2) + 1).  (* Prove that x is twice its half plus one for odd x *)
+    { rewrite Nat.div_mod with (x := x) (y := 2) at 1. rewrite E. auto. lia. }
+    rewrite <- Hx. auto. simpl. lia.
+    apply mod_2_contradiction in E. contradiction.
+Qed.
+
+
 Lemma check_instance_union : forall n,
   let np := generate_necklace_instance (n) in 
   instance_union np.
-Admitted.
+  Proof.
+  intros n.
+  unfold valid_union, generate_necklace_instance. simpl.
+  intros x. split.
+  - intros H_lt.
+    exists [2 * (x / 2); 2 * (x / 2) + 1].
+    split.
+    + assert (Hk: x / 2 < n).
+      { apply Nat.div_lt_upper_bound. lia. apply H_lt. }
+      apply in_map_iff.
+      exists (x / 2).
+      split.
+      * reflexivity.
+      * apply in_seq.
+        split; try lia; try (apply Nat.div_lt_upper_bound; lia).
+    + apply x_in_its_generated_pair.
+  - intros [l [H_in_l H_in_x]].
+    apply in_map_iff in H_in_l.
+    destruct H_in_l as [k [H_eq H_in_k]].
+    apply in_seq in H_in_k.
+    destruct H_in_k as [Hk1 Hk2].
+    subst.
+    simpl in H_in_x.
+    destruct H_in_x.
+    + subst. simpl. lia.
+    + destruct H.
+     ++  subst. simpl. lia.
+     ++ contradiction.
+Qed.
 
 
 
@@ -161,7 +214,6 @@ Proof.
   unfold transition_count.
   destruct binary_seq.
   - unfold valid_solution in H.
-    split H.
 
 Admitted.
 
