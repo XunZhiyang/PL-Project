@@ -39,6 +39,22 @@ Fixpoint transition_count (seq : list bool) : nat :=
       (if Bool.eqb b1 b2 then 0 else 1) + transition_count tail
   end.
 
+Definition transition_count_non_recursive (seq : list bool) : nat :=
+  let pairs := combine seq (tl seq) in
+  let count_transitions (acc : nat) (pair : bool * bool) :=
+    let (b1, b2) := pair in
+    if Bool.eqb b1 b2 then acc else acc + 1 in
+  List.fold_left count_transitions pairs 0.
+
+(* This proof is wrong
+Lemma transition_count_equivalence : forall seq, transition_count seq = transition_count_non_recursive seq.
+Proof.
+  intros seq.
+  induction seq as [| b1 [| b2 rest] IH]. simpl; auto.
+  - destruct (Bool.eqb b1 b2); simpl; auto.
+Qed.
+*)
+
 (* Check if a given instance of the necklace problem is valid *)
 
 Definition instance_even (np : necklace_problem) : Prop :=
@@ -219,14 +235,15 @@ Proof.
   intros np.
   intros sol.
   intros H.
+  destruct H.
+  inversion H0.
+  rewrite H2 in H0.
   induction n.
-  
   - simpl. lia.
-  - assert (H_prefix: valid_solution (generate_necklace_instance n) {| binary_seq := firstn (2 * n) sol.(binary_seq) |}).
-    { apply prefix_of_valid_solution_are_valid. unfold np in H.  apply H. }
-    assert (H_count: (transition_count (firstn (2 * n) (binary_seq sol))) + 
-    (if Bool.eqb (nth (2 * n - 2) (binary_seq sol) false) (nth (2 * n - 1) (binary_seq sol) false) then 0 else 1) >= S n).
-  
+  - destruct binary_seq as [| b1 [| b2 rest]].
+    + inversion H0. unfold length in H2. simpl. lia. (* The length of the binary sequence must be greater than 0 *)
+    + inversion H0. (* The length of the binary sequence must be greater than 1 *)
+      unfold length in H2. simpl in H2. lia.
 
 Admitted.
 
