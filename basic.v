@@ -39,6 +39,20 @@ Fixpoint transition_count (seq : list bool) : nat :=
       (if Bool.eqb b1 b2 then 0 else 1) + transition_count tail
   end.
 
+(* Check if a given instance of the necklace problem is valid *)
+
+Definition instance_even (np : necklace_problem) : Prop :=
+  forall Si : list nat, In Si np.(subsets) -> even_subset Si.
+
+Definition instance_union (np : necklace_problem) : Prop :=
+  valid_union np.(m) np.(subsets).
+
+Definition instance_disjoint (np : necklace_problem) : Prop :=
+  disjoint_subsets np.(subsets).
+
+Definition valid_instance (np : necklace_problem) : Prop :=
+  instance_even np /\ instance_union np /\ instance_disjoint np.
+
 (* Check if a given solution is valid for a given necklace problem *)
 Definition valid_solution (np : necklace_problem) (sol : solution) : Prop :=
   forall s : list nat, In s (subsets np) ->
@@ -49,13 +63,16 @@ Definition valid_solution (np : necklace_problem) (sol : solution) : Prop :=
 Definition generate_necklace_instance (n : nat) : necklace_problem :=
   {| m := 2 * n; subsets := map (fun k => [2 * k; 2 * k + 1]) (seq 0 n) |}.
 
-Lemma check_instance_even : forall n Si,
-  let np := generate_necklace_instance (n) in In Si np.(subsets) -> even_subset Si.
+
+
+Lemma check_instance_even : forall n,
+  let np := generate_necklace_instance (n) in 
+  instance_even np.
 Proof.
     intros n.
     intros Si.
     intros np.
-    unfold np.
+    unfold generate_necklace_instance.
     intros.
     unfold generate_necklace_instance in H.
     unfold even_subset.
@@ -72,12 +89,14 @@ Proof.
 Qed.
 
 Lemma check_instance_union : forall n,
-  let np := generate_necklace_instance (n) in valid_union np.(m) np.(subsets).
+  let np := generate_necklace_instance (n) in 
+  instance_union np.
 Admitted.
 
 
+
 Lemma check_instance_disjoint : forall n,
-  let np := generate_necklace_instance (n) in disjoint_subsets np.(subsets).
+  let np := generate_necklace_instance n in instance_disjoint np.
 Proof.
   intros n.
   unfold disjoint_subsets, generate_necklace_instance.
@@ -103,10 +122,24 @@ Proof.
   contradiction H3; reflexivity.
 Qed.
 
+Lemma check_valid_instance : forall n,
+  let np := generate_necklace_instance n in valid_instance np.
+Proof.
+  intros n.
+  unfold valid_instance.
+  split.
+  - apply check_instance_even.
+  - split.
+    + apply check_instance_union.
+    + apply check_instance_disjoint.
+Qed.
+
+
+
 (* Theorem: Any valid solution for the specific instance must have at least n transitions *)
 Theorem valid_solution_requires_transitions :
   forall n, let np := generate_necklace_instance n in
             forall sol : solution,
               valid_solution np sol -> transition_count (binary_seq sol) >= n.
-Proof.
 Admitted.
+
