@@ -210,8 +210,8 @@ Qed.
 (* Lemma: A valid solution must have transitions at the ends of the binary sequence *)
 Lemma valid_solution_requires_transitions_at_ends :
   forall n, let np := generate_necklace_instance n in
-            forall sol : solution,
-              valid_solution np sol -> (nth (2 * n - 2) sol.(binary_seq) false) <> (nth (2 * n - 1) sol.(binary_seq) false).
+            forall sol : solution, let s := length (binary_seq sol) in 
+              valid_solution np sol -> (nth (s - 2) sol.(binary_seq) false) <> (nth (s - 1) sol.(binary_seq) false).
 Admitted.
 
 Lemma prefix_of_valid_solution_are_valid :
@@ -222,8 +222,14 @@ Admitted.
 
 Proposition transition_count_of_list_with_one_more_transition :
   forall l: list bool, let s := length l in 
-  s >= 2 -> transition_count l >= (transition_count (firstn (s-2) l)) + (if Bool.eqb (nth (s-2) l false) (nth (s-1) l false) then 0 else 1).
+  s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count l >= S (transition_count (firstn (s-2) l)).
 Admitted.
+
+Proposition basic_calc_1 : forall n, n + S (n + 0) - 1 = 2 * n.
+Proof.
+  intros n.
+  lia.
+Qed.
 
 (* Theorem: Any valid solution for the specific instance must have at least n transitions *)
 Theorem valid_solution_requires_transitions :
@@ -233,19 +239,34 @@ Theorem valid_solution_requires_transitions :
 Proof.
   intros n.
   intros np.
-  intros sol.
-  intros H.
-  destruct H.
-  inversion H0.
-  rewrite H2 in H0.
   induction n.
-  - simpl. lia.
-  - destruct binary_seq as [| b1 [| b2 rest]].
-    + inversion H0. unfold length in H2. simpl. lia. (* The length of the binary sequence must be greater than 0 *)
-    + inversion H0. (* The length of the binary sequence must be greater than 1 *)
-      unfold length in H2. simpl in H2. lia.
-
-Admitted.
+  - intros sol.
+    intros H.
+    simpl. lia.
+  - intros sol.
+    intros H.
+    pose proof H as H_copy.
+    destruct H.
+    assert (Hlength: length (binary_seq sol) = 2 * S n ).
+    { apply H0. }
+    assert (Hmid: let s:= length (binary_seq sol) in transition_count (binary_seq sol) >= S (transition_count (firstn (s - 2) (binary_seq sol)))).
+    { apply transition_count_of_list_with_one_more_transition.
+      split.
+      - lia.
+      - apply valid_solution_requires_transitions_at_ends with (n:= S n).
+        + apply H_copy. }
+    assert (Hprefix: valid_solution (generate_necklace_instance n) {| binary_seq := firstn (2 * n) (binary_seq sol) |}).
+    { apply prefix_of_valid_solution_are_valid.
+      apply H_copy. }
+    apply IHn in Hprefix.
+    assert (Htrans: transition_count (firstn (2 * n) (binary_seq sol)) >= n).
+    { apply Hprefix. }
+    assert (Htrans2: let s:= length (binary_seq sol) in transition_count (firstn (s - 2) (binary_seq sol)) >= n).
+    { rewrite Hlength. simpl. rewrite basic_calc_1. apply Htrans. }
+    apply Nat.le_trans with (m := S (transition_count (firstn (length (binary_seq sol) - 2) (binary_seq sol)))).
+    + apply le_n_S in Htrans2. auto.
+    + apply Hmid.
+Qed.
 
 (* Theorem: Formal Theorem *)
 Theorem lower_bound_for_necklace_problem :
