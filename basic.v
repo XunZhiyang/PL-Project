@@ -293,7 +293,7 @@ Proof.
       split.
       - lia.
       - apply valid_solution_requires_transitions_at_ends with (n:= S n).
-        + apply H_copy. }
+        + lia. + apply H_copy. }
     assert (Hprefix: valid_solution (generate_necklace_instance n) {| binary_seq := firstn (2 * n) (binary_seq sol) |}).
     { apply prefix_of_valid_solution_are_valid.
       apply H_copy. }
