@@ -6,8 +6,6 @@ Require Import Coq.Arith.Arith.
 Import ListNotations.
 
 
-Definition is_even (n : nat) : Prop := exists k : nat, n = 2 * k.
-
 (* A structure to represent the necklace problem *)
 Structure necklace_problem := {
   m : nat;                            (* Total number of elements *)
@@ -19,7 +17,9 @@ Structure solution := {
   binary_seq : list bool              (* The binary sequence *)
 }.
 
-(* To ensure all subsets are non-empty and have an even number of elements *)
+Definition is_even (n : nat) : Prop := exists k : nat, n = 2 * k.
+
+(* To ensure all subsets have an even number of elements *)
 Definition even_subset (s : list nat) : Prop := is_even (length s).
 
 (* Ensure the union of all subsets is exactly {0, 1, ..., m-1} *)
@@ -195,6 +195,7 @@ Proof.
   contradiction H3; reflexivity.
 Qed.
 
+(* Combine three previous lemmas *)
 Lemma check_valid_instance : forall n,
   let np := generate_necklace_instance n in valid_instance np.
 Proof.
