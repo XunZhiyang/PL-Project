@@ -616,15 +616,37 @@ Lemma transition_count_last_equal_to_one:
   s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count (skipn (s - 2) l) = 1.
 Proof.
   intros.
+  assert (H1: s = length l) by lia.
+  rewrite H1.
+  destruct H.
   rewrite structure_of_tail.
-Admitted.
+  - unfold transition_count.
+    simpl.
+    rewrite <- H1.
+    assert (Heqb: Bool.eqb (nth (s - 2) l false) (nth (s - 1) l false) = false).
+    { destruct (nth (s - 2) l false), (nth (s - 1) l false);
+    simpl; try reflexivity; contradiction H0; auto. }
+    rewrite Heqb.
+    auto.
+  - auto.
+Qed.
 
 
 Lemma transition_count_last:
   forall l: list bool, let s := length l in
   s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count l = S (transition_count (firstn (s-1) l)).
 Proof.
-Admitted.
+  intros.
+  assert (H1: s = length l) by lia.
+  rewrite H1.
+  rewrite transition_count_two_parts_form1.
+  - assert (H2: transition_count (skipn (s - 2) l) = 1).
+    { apply transition_count_last_equal_to_one. auto. }
+    rewrite H1 in H2.
+    rewrite H2.
+    lia.
+  - lia.
+Qed.
 
 Lemma firstn_decrease_transition_count:
   forall l: list bool, let s := length l in
