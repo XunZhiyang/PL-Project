@@ -555,12 +555,60 @@ Proof.
     lia.
 Qed.
 
-Lemma structure_of_tail: 
+(* Lemma structure_of_tail: 
 forall l: list bool, let s := length l in
   s >= 2 -> skipn (s - 2) l = (nth (s - 2) l false) :: (nth (s - 1) l false) :: [].
+  Proof.
+  intros l.
+  intros Hlen.
+  induction l.
+  - simpl in Hlen. intros. lia.
+  - simpl in Hlen. destruct l.
+    + simpl. simpl in Hlen. lia.
+    + apply IHl. simpl in Hlen. lia. 
+Qed. *)
+
+Lemma structure_of_tail: 
+forall s,
+forall l: list bool,
+  s >= 2 -> s = length l -> skipn (s - 2) l = (nth (s - 2) l false) :: (nth (s - 1) l false) :: [].
 Proof.
-  
-Admitted.
+  induction s.
+  - intros. lia.
+  - intros.
+    destruct s.
+    + simpl in H0. lia.
+    + simpl in H0. simpl in H.
+      destruct l.
+      * simpl in H0. lia.
+      * simpl in H0.
+      destruct (le_lt_dec 1 s) as [Hge1 | Hlt1].
+      **       assert (skipn (S (S s) - 2) (b :: l) = skipn (S s - 2) l).
+      { simpl.
+        replace (s - 0) with (S ( s-1)) by lia.
+        apply skipn_cons with (n := s-1).
+      }
+      rewrite H1.
+      assert(nth (S (S s) - 2) (b :: l) false = nth (S s - 2) l false).
+      {
+        simpl.
+        replace (s - 0) with (S ( s-1)) by lia.
+        auto.
+      }
+      rewrite H2.
+      assert(nth (S (S s) - 1) (b :: l) false = nth (S s - 1) l false).
+      { simpl.
+      replace (s - 0) with (s) by lia.
+      auto. }
+      rewrite H3.
+      apply IHs with (l := l).  lia. lia.
+      ** assert (s = 0) by lia. subst. simpl.
+      destruct l.
+      *** simpl in H0. lia.
+      *** simpl in H0. assert (l = []).
+      { destruct l. auto. simpl in H0. lia. }
+      simpl. subst. auto.
+Qed.
 
 
 Lemma transition_count_last_equal_to_one: 
