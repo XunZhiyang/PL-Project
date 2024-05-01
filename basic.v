@@ -320,10 +320,36 @@ Proof.
 Qed.
 
 
+Lemma transition_count_last:
+  forall l: list bool, let s := length l in
+  s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count l = S (transition_count (firstn (s-1) l)).
+Proof.
+Admitted.
+
+Lemma transition_count_increase:
+  forall l: list bool, let s := length l in
+  s >= 2 -> transition_count (firstn (s-1) l) >= transition_count (firstn (s-2) l).
+Proof.
+  intros l.
+  unfold transition_count.
+Admitted.
+
 Proposition transition_count_of_list_with_one_more_transition :
   forall l: list bool, let s := length l in 
   s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count l >= S (transition_count (firstn (s-2) l)).
-Admitted.
+Proof.
+  intros l.
+  intros.
+  assert (s >= 2) by lia.
+  apply transition_count_last in H.
+  rewrite H.
+  assert (s = length l) by lia.
+  rewrite H1.
+  assert (transition_count (firstn (s - 1) l) >= transition_count (firstn (s - 2) l)).
+  { apply transition_count_increase. lia. }
+  rewrite H1 in H2.
+  lia.
+Qed.
 
 Proposition basic_calc_1 : forall n, n + S (n + 0) - 1 = 2 * n.
 Proof.
