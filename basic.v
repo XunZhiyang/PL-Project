@@ -90,7 +90,7 @@ Proof.
   auto.
 Qed.
 
-Lemma decompose_seq_into_two_parts: forall seq : list bool, 
+Lemma get_nat_list_prefix: forall seq : list bool, 
   let s := length seq in
   s >= 2 -> 
   firstn (s - 2 ) (get_nat_list seq) = 
@@ -116,8 +116,6 @@ Proof.
   replace (s - 2) with (s - 1 - 1) by lia.
   reflexivity.
 Qed.
-
-
 (* This proof is wrong
 Lemma transition_count_equivalence : forall seq, transition_count seq = transition_count_non_recursive seq.
 Proof.
