@@ -555,16 +555,20 @@ Proof.
     lia.
 Qed.
 
+Lemma structure_of_tail: 
+forall l: list bool, let s := length l in
+  s >= 2 -> skipn (s - 2) l = (nth (s - 2) l false) :: (nth (s - 1) l false) :: [].
+Proof.
+  
+Admitted.
+
+
 Lemma transition_count_last_equal_to_one: 
   forall l: list bool, let s := length l in
   s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count (skipn (s - 2) l) = 1.
 Proof.
   intros.
-  assert (Htail: skipn (s - 2) l = (nth (s - 2) l false) :: (nth (s - 1) l false) :: []).
-  { destruct l as [| h1 [| h2 t]].
-    - simpl in H. lia.
-    - simpl in H. destruct H. contradiction H0. auto.
-  }
+  rewrite structure_of_tail.
 Admitted.
 
 
