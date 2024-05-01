@@ -578,9 +578,20 @@ Lemma firstn_decrease_transition_count:
   forall l: list bool, let s := length l in
   s >= 1 ->  transition_count l >= transition_count (firstn (s-1) l) .
 Proof.
-  intros.
-
-Admitted.
+  intros l s Hs.
+  destruct (le_lt_dec 2 s) as [Hge2 | Hlt2].
+  - apply transition_count_two_parts_form1 in Hge2.
+    replace (length l - 1) with (s - 1) in Hge2 by lia.
+    lia.
+  - assert (Hlen: length (firstn (s-1) l) < 2) by (rewrite firstn_length, Nat.min_l; lia).
+    assert (Hzero2: transition_count (firstn (s-1) l) = 0).
+    * assert (s = 1) by lia. 
+      replace s with 1.
+      simpl.
+      auto.
+    * rewrite Hzero2.
+      lia.
+Qed.
 
 
 Lemma transition_count_increase:
