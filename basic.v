@@ -235,28 +235,6 @@ Proof.
   auto.
 Qed.
 
-(*
-Lemma get_nat_list_two_parts: forall seq : list bool, 
-  let s := length seq in
-  s >= 2 -> 
-  get_nat_list seq = get_nat_list (firstn (s - 1) seq) ++ [from_pair_to_nat ((nth (s - 2) seq false), (nth (s - 1) seq false))]. 
-Proof.
-  intros seq s H.
-  assert (H1: s = length seq) by lia.
-  unfold get_nat_list.
-  rewrite <- H1.
-Admitted.
-*)
-
-  (* This proof is wrong
-Lemma transition_count_equivalence : forall seq, transition_count seq = transition_count_non_recursive seq.
-Proof.
-  intros seq.
-  induction seq as [| b1 [| b2 rest] IH]. simpl; auto.
-  - destruct (Bool.eqb b1 b2); simpl; auto.
-Qed.
-*)
-
 (* Check if a given instance of the necklace problem is valid *)
 
 Definition instance_even (np : necklace_problem) : Prop :=
@@ -555,58 +533,6 @@ Proof.
     lia.
 Qed.
 
-(*
-Lemma structure_of_head1: 
-forall l: list bool, let s := length l in
-  s >= 2 -> firstn 1 l =  (nth 0 l false) :: [].
-Proof.
-  intros.
-  assert (H1: s = length l) by lia.
-  induction l.
-  - simpl in H1. rewrite H1 in H. lia.
-  - simpl. auto.
-Qed.
-
-Lemma rev_unit: forall l: list bool, length l = 1 -> rev l =  l.
-Proof.
-  intros.
-  induction l.
-  - auto.
-  - simpl in H.
-    destruct l.
-    + simpl. auto.
-    + simpl in H. lia.
-Qed.
-
-Lemma structure_of_tail_tail_rev: 
-forall l: list bool, let s := length l in
-  s >= 2 -> skipn (s - 1) (rev l) =  (nth (s - 1) (rev l) false) :: [].
-Proof.
-  intros.
-  assert (H1: s = length l) by lia.
-  rewrite H1.
-  rewrite rev_nth.
-  - rewrite skipn_rev.
-    replace (length l - (length l - 1)) with 1 by lia.
-    replace (length l - S (length l - 1)) with 0 by lia.
-    rewrite rev_unit.
-    + rewrite structure_of_head1.
-      * simpl. auto.
-      * lia.
-    + rewrite firstn_length. lia.
-  - lia.
-Qed.
-
-Lemma structure_of_tail_tail: 
-forall l: list bool, let s := length l in
-  s >= 2 -> skipn (s - 1) l =  (nth (s - 1) l false) :: [].
-Proof.
-  intros.
-  rewrite <- rev_involutive with (l:=l).
-  rewrite structure_of_tail_tail_rev with (l := rev l).
-
-*)
-
 Lemma structure_of_tail: 
 forall s,
 forall l: list bool,
@@ -667,6 +593,7 @@ Proof.
     simpl; try reflexivity; contradiction H0; auto. }
     rewrite Heqb.
     auto.
+  - auto.
   - auto.
 Qed.
 
