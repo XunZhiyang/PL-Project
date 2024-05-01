@@ -235,6 +235,7 @@ Proof.
   auto.
 Qed.
 
+(*
 Lemma get_nat_list_two_parts: forall seq : list bool, 
   let s := length seq in
   s >= 2 -> 
@@ -245,6 +246,7 @@ Proof.
   unfold get_nat_list.
   rewrite <- H1.
 Admitted.
+*)
 
   (* This proof is wrong
 Lemma transition_count_equivalence : forall seq, transition_count seq = transition_count_non_recursive seq.
@@ -553,18 +555,23 @@ Proof.
     lia.
 Qed.
 
+Lemma transition_count_last_equal_to_one: 
+  forall l: list bool, let s := length l in
+  s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count (skipn (s - 2) l) = 1.
+Proof.
+  intros.
+  assert (Htail: skipn (s - 2) l = (nth (s - 2) l false) :: (nth (s - 1) l false) :: []).
+  { destruct l as [| h1 [| h2 t]].
+    - simpl in H. lia.
+    - simpl in H. destruct H. contradiction H0. auto.
+  }
+Admitted.
+
 
 Lemma transition_count_last:
   forall l: list bool, let s := length l in
   s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count l = S (transition_count (firstn (s-1) l)).
 Proof.
-  intros l.
-  intros.
-  destruct H as [H1 H2].
-  assert (s = length l) by lia.
-  rewrite H.
-  unfold transition_count.
-  unfold count_transitions_in_pair.
 Admitted.
 
 Lemma firstn_decrease_transition_count:
