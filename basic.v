@@ -258,17 +258,50 @@ Qed.
 
 Lemma range_of_subsets : forall n, let np := generate_necklace_instance n in
   forall s, In s (subsets np) -> forall i, In i s -> i < 2*n.
-  Admitted.
+Proof.
+  intros n np s Hs i Hi.
+  apply in_map_iff in Hs.
+  destruct Hs as [k [H1 H2]].
+  inversion H1. subst.
+  apply in_seq in H2.
+  destruct H2 as [H2 H3].
+  simpl in Hi.
+  destruct Hi.
+  - subst. lia.
+  - destruct H. lia.
+Qed.
 
 Lemma firstn_preserves : forall l: list bool, forall i, forall t,  i < t -> nth i
 (binary_seq
    {| binary_seq := firstn (t) l|}) false =
 nth i (l) false.
-Admitted.
+Proof.
+  intros l.
+  induction l.
+  - intros. simpl. destruct i; destruct t; try lia.
+    + auto.
+    + simpl. destruct i; destruct t; try lia.
+  - intros. destruct t.
+    + lia.
+    + simpl. destruct i.
+      * auto.
+      * apply IHl. lia.
+Qed.
 
 Lemma subsets_monotonicity: forall n,
   forall s, In s (subsets (generate_necklace_instance n)) -> In s (subsets (generate_necklace_instance (S n))).
-  Admitted.
+Proof.
+  intros n s H.
+  apply in_map_iff in H.
+  destruct H as [k [H1 H2]].
+  inversion H1. subst.
+  apply in_map_iff.
+  exists k.
+  split.
+  - reflexivity.
+  - apply in_seq. split; try lia.
+    apply in_seq in H2. lia.  
+Qed.
 
 
 Lemma prefix_of_valid_solution_are_valid :
