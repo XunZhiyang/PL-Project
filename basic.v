@@ -116,7 +116,125 @@ Proof.
   replace (s - 2) with (s - 1 - 1) by lia.
   reflexivity.
 Qed.
-(* This proof is wrong
+
+Lemma combine_app: forall A B (l1 l2: list A) (l3 l4: list B),
+  length l1 = length l3 -> length l2 = length l4 ->
+  combine (l1 ++ l2) (l3 ++ l4) = combine l1 l3 ++ combine l2 l4.
+Proof.
+  intros A B l1 l2.
+  induction l1 as [| x1 l1' IH1] in l2 |- *.
+  - simpl.
+    intros l3 l4 H1 H2.
+    inversion H1.
+    assert (Hl3nil: l3 = []). { destruct l3. auto. simpl length in H2. discriminate H0. }
+    assert (H3: l3 ++ l4 = l4). { rewrite Hl3nil. apply app_nil_l. }
+    rewrite H3. auto.
+  -
+    intros l3 l4 H1 H2.
+    destruct l3 as [| x3 l3'].
+    + simpl in H1. discriminate H1.
+    + simpl in H1.
+      assert (H3: length l1' = length l3'). { simpl in H1. lia. }
+      assert (Hsplit: combine (x1 :: l1') (x3 :: l3') = (x1, x3) :: combine l1' l3').
+      { auto. }
+      rewrite Hsplit.
+      assert (Hcomm: (((x1, x3) :: combine l1' l3') ++ combine l2 l4) = (x1, x3) :: (combine l1' l3' ++ combine l2 l4)).
+      { auto. }
+      rewrite Hcomm.
+      assert (Hsplit2: combine ((x1 :: l1') ++ l2) ((x3 :: l3') ++ l4) = (x1, x3) :: (combine (l1' ++ l2) (l3' ++ l4))).
+      { auto. }
+      rewrite Hsplit2.
+      replace ((x1, x3) :: combine l1' l3' ++ combine l2 l4) with ((x1, x3) :: (combine l1' l3' ++ combine l2 l4)) by auto.
+      assert (Hsame: combine (l1' ++ l2) (l3' ++ l4) = combine l1' l3' ++ combine l2 l4).
+      {
+        apply IH1.
+        - auto.
+        - simpl in H2. lia.
+      }
+      rewrite Hsame.
+      reflexivity.
+Qed.
+      
+
+Lemma get_nat_list_two_parts_form1: forall seq : list bool, 
+  let s := length seq in
+  s >= 2 -> 
+  get_nat_list seq = get_nat_list (firstn (s - 1) seq) ++ get_nat_list (skipn (s - 2) seq). 
+Proof.
+  intros seq s H.
+  assert (H1: s = length seq) by lia.
+  unfold get_nat_list.
+  assert (H2: length (firstn (s - 1) seq) = s - 1). 
+    { apply firstn_length_le; lia. }
+  assert (H3: length (skipn (s - 2) seq) = 2).
+    { rewrite skipn_length. lia. } 
+  rewrite <- H1.
+  rewrite <- map_app.
+  assert (H4: length (firstn (s - 2) seq) = s - 2).
+  { apply firstn_length_le. lia. }
+  rewrite <- combine_app.
+    -
+    rewrite H2.
+    
+    rewrite H3.
+    replace (s - 1 - 1) with (s - 2) by lia.
+  (*
+    rewrite firstn_firstn. 
+    assert (Hmin: Init.Nat.min (s - 1 - 1) (s - 1) = (s-2)).
+    { lia. }
+    rewrite Hmin.
+  *)
+    rewrite firstn_skipn_comm.
+    replace (s - 2 + (2 - 1)) with (s - 1) by lia.
+    rewrite firstn_skipn.
+    rewrite skipn_skipn.
+    replace (1 + (s-2)) with (s - 1) by lia.
+    assert (Hcomm2: (skipn 1 (firstn (s - 1) seq) ++
+    skipn (s - 1) seq) = (skipn 1 ((firstn (s - 1) seq) ++
+    skipn (s - 1) seq))).
+    {
+      rewrite skipn_app. rewrite H2.
+      replace (1 - (s - 1)) with 0 by lia.
+      auto.
+    }
+    rewrite Hcomm2.
+    rewrite firstn_skipn.
+    reflexivity.
+  (*argue about length*)
+  - rewrite H2.
+    rewrite firstn_firstn. 
+    assert (Hmin: Init.Nat.min (s - 1 - 1) (s - 1) = (s-2)).
+    { lia. }
+    rewrite Hmin.
+    rewrite H4.
+    rewrite skipn_firstn_comm.
+    assert (H5: length (firstn (s - 1 - 1) (skipn 1 seq)) = s-2).
+    { rewrite firstn_length_le. lia. rewrite skipn_length. lia. }
+    rewrite H5.
+    reflexivity.
+  (*argue about length*)
+  - rewrite H3.
+    rewrite skipn_length.
+    rewrite H3.
+    rewrite firstn_length_le.
+    + reflexivity.
+    + lia.
+Qed.
+     
+  
+
+Lemma get_nat_list_two_parts: forall seq : list bool, 
+  let s := length seq in
+  s >= 2 -> 
+  get_nat_list seq = get_nat_list (firstn (s - 1) seq) ++ [from_pair_to_nat ((nth (s - 2) seq false), (nth (s - 1) seq false))]. 
+Proof.
+  intros seq s H.
+  assert (H1: s = length seq) by lia.
+  unfold get_nat_list.
+  rewrite <- H1.
+Admitted.
+
+  (* This proof is wrong
 Lemma transition_count_equivalence : forall seq, transition_count seq = transition_count_non_recursive seq.
 Proof.
   intros seq.
@@ -441,26 +559,8 @@ Lemma firstn_decrease_transition_count:
   forall l: list bool, let s := length l in
   s >= 1 ->  transition_count l >= transition_count (firstn (s-1) l) .
 Proof.
-  (* intros l.
   intros.
-  assert (s >= 1) by lia.
-  assert (H1: transition_count l = transition_count (rev l)).
-  { rewrite transition_count_reverse. auto. }
-  rewrite H1.
-  assert (H2: transition_count (firstn (s-1) l) = transition_count (rev (firstn (s-1) l))).
-  { rewrite transition_count_reverse. auto. }
-  rewrite H2.
-  assert(rev l = [nth s l]++ rev (firstn (s-1) l)).
-  { rewrite <- rev_involutive. rewrite rev_app_distr. simpl. auto. }
-  assert (H2: transition_count (rev l) = transition_count (rev (firstn (s-1) l))).
-  { f_equal. apply firstn_all. lia. }
-  rewrite H2.
-  assert (H3: transition_count (rev (firstn (s-1) l)) = transition_count (firstn (s-1) l)).
-  { apply transition_count_reverse. }
-  rewrite H3.
-  assert (H4: transition_count (firstn (s-1) l) = transition_count (firstn (s-1) l)).
-  { auto. }
-  auto. *)
+  
 Admitted.
 
 
