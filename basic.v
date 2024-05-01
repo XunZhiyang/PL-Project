@@ -32,19 +32,78 @@ Definition disjoint_subsets (subs : list (list nat)) : Prop :=
   forall x : nat, ~ (In x l1 /\ In x l2).
 
 (* Count transitions in the binary sequence *)
-Fixpoint transition_count (seq : list bool) : nat :=
+Fixpoint transition_count_re (seq : list bool) : nat :=
   match seq with
   | [] | [_] => 0
   | b1 :: (b2 :: rest as tail) => 
-      (if Bool.eqb b1 b2 then 0 else 1) + transition_count tail
+      (if Bool.eqb b1 b2 then 0 else 1) + transition_count_re tail
   end.
 
-Definition transition_count_non_recursive (seq : list bool) : nat :=
+Definition count_single_transitions_in_pair (acc : nat) (pair : bool * bool) : nat :=
+  let (b1, b2) := pair in
+  if Bool.eqb b1 b2 then acc else S acc.
+  
+Definition count_transitions_in_pair (pairs : list (bool * bool)) : nat :=
+  List.fold_left count_single_transitions_in_pair pairs 0.
+
+Definition transition_count_non_re (seq : list bool) : nat :=
   let pairs := combine seq (tl seq) in
-  let count_transitions (acc : nat) (pair : bool * bool) :=
-    let (b1, b2) := pair in
-    if Bool.eqb b1 b2 then acc else acc + 1 in
-  List.fold_left count_transitions pairs 0.
+  count_transitions_in_pair pairs.
+
+Fixpoint sum_nat_list (l : list nat) : nat :=
+  match l with
+  | [] => 0         (* If the list is empty, the sum is 0 *)
+  | x :: rest => x + sum_nat_list rest  (* Add the head to the sum of the rest of the list *)
+  end.
+
+Lemma sum_nat_list_app : forall l1 l2, sum_nat_list (l1 ++ l2) = sum_nat_list l1 + sum_nat_list l2.
+Proof.
+  intros l1 l2.
+  induction l1 as [| x l1' IH].
+  - simpl. auto.
+  - simpl. rewrite IH. lia.
+Qed.
+
+Definition from_pair_to_nat (pair : bool * bool) : nat :=
+  let (b1, b2) := pair in
+  if Bool.eqb b1 b2 then 0 else 1.
+
+Definition get_nat_list (seq : list bool) : list nat :=
+  let s := length seq in
+  map from_pair_to_nat (combine (firstn (s - 1) seq) (skipn 1 seq)).
+
+Definition transition_count (seq : list bool) : nat :=
+  sum_nat_list (get_nat_list seq).
+
+Lemma imbalance_combine: forall seq : list bool,
+  let s := length seq in
+  s >= 1 ->
+  combine seq (skipn 1 seq) = combine (firstn (s - 1) seq) (skipn 1 seq).
+Proof.
+  intros seq.
+  rewrite combine_firstn_r.
+  intros.
+  assert (s = length seq) by lia.
+  assert (s - 1 = length (skipn 1 seq)).
+  { rewrite skipn_length. lia. }
+  rewrite H1.
+  auto.
+Qed.
+
+Lemma decompose_seq_into_two_parts: forall seq : list bool, 
+  let s := length seq in
+  s >= 2 -> 
+  firstn (s - 2 ) (get_nat_list seq) = 
+  get_nat_list (firstn (s - 1) seq).
+Proof.
+  intros seq s H.
+  assert (H1: s = length seq) by lia.
+  rewrite H1.
+  unfold get_nat_list.
+  rewrite firstn_map.
+  rewrite combine_firstn.
+Admitted.
+
 
 (* This proof is wrong
 Lemma transition_count_equivalence : forall seq, transition_count seq = transition_count_non_recursive seq.
@@ -264,15 +323,63 @@ Lemma transition_count_last:
   forall l: list bool, let s := length l in
   s >= 2 /\ (nth (s-2) l false) <> (nth (s-1) l false) -> transition_count l = S (transition_count (firstn (s-1) l)).
 Proof.
+  intros l.
+  intros.
+  destruct H as [H1 H2].
+  assert (s = length l) by lia.
+  rewrite H.
+  unfold transition_count.
+  unfold count_transitions_in_pair.
 Admitted.
+
+Lemma firstn_decrease_transition_count:
+  forall l: list bool, let s := length l in
+  s >= 1 ->  transition_count l >= transition_count (firstn (s-1) l) .
+Proof.
+  (* intros l.
+  intros.
+  assert (s >= 1) by lia.
+  assert (H1: transition_count l = transition_count (rev l)).
+  { rewrite transition_count_reverse. auto. }
+  rewrite H1.
+  assert (H2: transition_count (firstn (s-1) l) = transition_count (rev (firstn (s-1) l))).
+  { rewrite transition_count_reverse. auto. }
+  rewrite H2.
+  assert(rev l = [nth s l]++ rev (firstn (s-1) l)).
+  { rewrite <- rev_involutive. rewrite rev_app_distr. simpl. auto. }
+  assert (H2: transition_count (rev l) = transition_count (rev (firstn (s-1) l))).
+  { f_equal. apply firstn_all. lia. }
+  rewrite H2.
+  assert (H3: transition_count (rev (firstn (s-1) l)) = transition_count (firstn (s-1) l)).
+  { apply transition_count_reverse. }
+  rewrite H3.
+  assert (H4: transition_count (firstn (s-1) l) = transition_count (firstn (s-1) l)).
+  { auto. }
+  auto. *)
+Admitted.
+
 
 Lemma transition_count_increase:
   forall l: list bool, let s := length l in
   s >= 2 -> transition_count (firstn (s-1) l) >= transition_count (firstn (s-2) l).
 Proof.
   intros l.
-  unfold transition_count.
-Admitted.
+  intros.
+  assert (s >= 2) by lia.
+  assert (Init.Nat.min (s - 2) (s - 1) = s-2) by lia.
+  assert (H2: firstn (s-2) l = firstn (s-2) (firstn (s-1) l)).
+  { rewrite firstn_firstn. rewrite H1. auto. }
+  rewrite H2.
+  assert( length (firstn (s-1) l) = s-1 ).
+  { apply firstn_length_le. lia. }
+  assert( length (firstn (s-1) l) >= 1 ).
+  { rewrite H3. lia. }
+  assert(s-2 = length (firstn (s-1) l)-1).
+  { rewrite H3. lia. }
+  rewrite H5.
+  apply firstn_decrease_transition_count.
+  apply H4.
+Qed.
 
 Proposition transition_count_of_list_with_one_more_transition :
   forall l: list bool, let s := length l in 
