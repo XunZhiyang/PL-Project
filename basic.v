@@ -555,6 +555,58 @@ Proof.
     lia.
 Qed.
 
+(*
+Lemma structure_of_head1: 
+forall l: list bool, let s := length l in
+  s >= 2 -> firstn 1 l =  (nth 0 l false) :: [].
+Proof.
+  intros.
+  assert (H1: s = length l) by lia.
+  induction l.
+  - simpl in H1. rewrite H1 in H. lia.
+  - simpl. auto.
+Qed.
+
+Lemma rev_unit: forall l: list bool, length l = 1 -> rev l =  l.
+Proof.
+  intros.
+  induction l.
+  - auto.
+  - simpl in H.
+    destruct l.
+    + simpl. auto.
+    + simpl in H. lia.
+Qed.
+
+Lemma structure_of_tail_tail_rev: 
+forall l: list bool, let s := length l in
+  s >= 2 -> skipn (s - 1) (rev l) =  (nth (s - 1) (rev l) false) :: [].
+Proof.
+  intros.
+  assert (H1: s = length l) by lia.
+  rewrite H1.
+  rewrite rev_nth.
+  - rewrite skipn_rev.
+    replace (length l - (length l - 1)) with 1 by lia.
+    replace (length l - S (length l - 1)) with 0 by lia.
+    rewrite rev_unit.
+    + rewrite structure_of_head1.
+      * simpl. auto.
+      * lia.
+    + rewrite firstn_length. lia.
+  - lia.
+Qed.
+
+Lemma structure_of_tail_tail: 
+forall l: list bool, let s := length l in
+  s >= 2 -> skipn (s - 1) l =  (nth (s - 1) l false) :: [].
+Proof.
+  intros.
+  rewrite <- rev_involutive with (l:=l).
+  rewrite structure_of_tail_tail_rev with (l := rev l).
+
+*)
+
 Lemma structure_of_tail: 
 forall l: list bool, let s := length l in
   s >= 2 -> skipn (s - 2) l = (nth (s - 2) l false) :: (nth (s - 1) l false) :: [].
