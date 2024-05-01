@@ -555,19 +555,6 @@ Proof.
     lia.
 Qed.
 
-(* Lemma structure_of_tail: 
-forall l: list bool, let s := length l in
-  s >= 2 -> skipn (s - 2) l = (nth (s - 2) l false) :: (nth (s - 1) l false) :: [].
-  Proof.
-  intros l.
-  intros Hlen.
-  induction l.
-  - simpl in Hlen. intros. lia.
-  - simpl in Hlen. destruct l.
-    + simpl. simpl in Hlen. lia.
-    + apply IHl. simpl in Hlen. lia. 
-Qed. *)
-
 Lemma structure_of_tail: 
 forall s,
 forall l: list bool,
