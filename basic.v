@@ -98,11 +98,24 @@ Lemma decompose_seq_into_two_parts: forall seq : list bool,
 Proof.
   intros seq s H.
   assert (H1: s = length seq) by lia.
-  rewrite H1.
+  
   unfold get_nat_list.
+  rewrite <- H1. 
   rewrite firstn_map.
   rewrite combine_firstn.
-Admitted.
+  rewrite firstn_firstn.
+  assert (Hmin: Init.Nat.min (s - 2) (s - 1) = (s-2)).
+  { lia. }
+  rewrite Hmin.
+  rewrite skipn_firstn_comm.
+  assert (Hlength: (length (firstn (s - 1) seq) - 1) = (s-2)).
+  { rewrite firstn_length_le. lia. rewrite H1. lia. }
+  rewrite Hlength.
+  rewrite firstn_firstn.
+  rewrite Hmin.
+  replace (s - 2) with (s - 1 - 1) by lia.
+  reflexivity.
+Qed.
 
 
 (* This proof is wrong
