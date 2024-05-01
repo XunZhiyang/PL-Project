@@ -31,6 +31,7 @@ Definition disjoint_subsets (subs : list (list nat)) : Prop :=
   forall l1 l2 : list nat, In l1 subs -> In l2 subs -> l1 <> l2 -> 
   forall x : nat, ~ (In x l1 /\ In x l2).
 
+(* Some other version of transition_count 
 (* Count transitions in the binary sequence *)
 Fixpoint transition_count_re (seq : list bool) : nat :=
   match seq with
@@ -49,6 +50,7 @@ Definition count_transitions_in_pair (pairs : list (bool * bool)) : nat :=
 Definition transition_count_non_re (seq : list bool) : nat :=
   let pairs := combine seq (tl seq) in
   count_transitions_in_pair pairs.
+*)
 
 Fixpoint sum_nat_list (l : list nat) : nat :=
   match l with
@@ -74,21 +76,6 @@ Definition get_nat_list (seq : list bool) : list nat :=
 
 Definition transition_count (seq : list bool) : nat :=
   sum_nat_list (get_nat_list seq).
-
-Lemma imbalance_combine: forall seq : list bool,
-  let s := length seq in
-  s >= 1 ->
-  combine seq (skipn 1 seq) = combine (firstn (s - 1) seq) (skipn 1 seq).
-Proof.
-  intros seq.
-  rewrite combine_firstn_r.
-  intros.
-  assert (s = length seq) by lia.
-  assert (s - 1 = length (skipn 1 seq)).
-  { rewrite skipn_length. lia. }
-  rewrite H1.
-  auto.
-Qed.
 
 Lemma get_nat_list_prefix: forall seq : list bool, 
   let s := length seq in
@@ -632,7 +619,6 @@ Proof.
     * rewrite Hzero2.
       lia.
 Qed.
-
 
 Lemma transition_count_increase:
   forall l: list bool, let s := length l in
