@@ -296,28 +296,122 @@ Proof.
     simpl.
     replace (n + 0) with n by lia.
     replace (n - 1 + 0) with (n-1) by lia.
-    (* rewrite Nat.add_0_r.
-    rewrite Nat.add_0_r. *)
-    (* rewrite <- Nat.add_assoc. *)
     replace (n - 1 + (n - 1)) with (n + n - 2) by lia.
     simpl.
     replace (n + n - 2 + 1) with (n + n - 1). auto. apply stupid_coq. apply Hgreater. }
     specialize (Hpart Hin).
-    (* unfold half_sum in Hpart. *)
-    (* simpl map in Hpart. *)
-    (* rewrite H in Hpart at 1. *)
     simpl in Hpart.
     destruct (nth (s - 2) (binary_seq sol)); destruct (nth (s - 1) (binary_seq sol));
-    lia. (* Based on the calculation for partition *)
+    lia. 
   }
   exact Hdiff.
 Qed.
+
+
+Lemma map_ext_in : forall A B (f g : A -> B) l, (forall x, In x l -> f x = g x) -> map f l = map g l.
+Proof.
+  intros A B f g l H.
+  induction l.
+  - simpl. auto.
+  - simpl. f_equal. apply H. left. auto. apply IHl. intros. apply H. right. auto.
+Qed.
+
+Lemma range_of_subsets : forall n, let np := generate_necklace_instance n in
+  forall s, In s (subsets np) -> forall i, In i s -> i < 2*n.
+Proof.
+  intros n np s Hs i Hi.
+  apply in_map_iff in Hs.
+  destruct Hs as [k [H1 H2]].
+  inversion H1. subst.
+  apply in_seq in H2.
+  destruct H2 as [H2 H3].
+  simpl in Hi.
+  destruct Hi.
+  - subst. lia.
+  - destruct H. lia.
+Qed.
+
+Lemma firstn_preserves : forall l: list bool, forall i, forall t,  i < t -> nth i
+(binary_seq
+   {| binary_seq := firstn (t) l|}) false =
+nth i (l) false.
+Proof.
+  intros l.
+  induction l.
+  - intros. simpl. destruct i; destruct t; try lia.
+    + auto.
+    + simpl. destruct i; destruct t; try lia.
+  - intros. destruct t.
+    + lia.
+    + simpl. destruct i.
+      * auto.
+      * apply IHl. lia.
+Qed.
+
+Lemma subsets_monotonicity: forall n,
+  forall s, In s (subsets (generate_necklace_instance n)) -> In s (subsets (generate_necklace_instance (S n))).
+Proof.
+  intros n s H.
+  apply in_map_iff in H.
+  destruct H as [k [H1 H2]].
+  inversion H1. subst.
+  apply in_map_iff.
+  exists k.
+  split.
+  - reflexivity.
+  - apply in_seq. split; try lia.
+    apply in_seq in H2. lia.  
+Qed.
+
 
 Lemma prefix_of_valid_solution_are_valid :
   forall n, let np := generate_necklace_instance (S n) in
             forall sol : solution,
               valid_solution np sol -> valid_solution (generate_necklace_instance n) {| binary_seq := firstn (2 * n) sol.(binary_seq) |}.
-Admitted.
+Proof.
+  intros n np sol Hvalid.
+  unfold valid_solution, valid_solution_partition, valid_instance in *.
+  destruct Hvalid as [Hpart_sol Hlen_sol].
+  split.
+  - (* Valid Solution Partition *)
+    intros s Hin.
+    assert (Hin_orig : In s (subsets (generate_necklace_instance (S n)))).
+    { apply subsets_monotonicity. auto. }
+    apply Hpart_sol in Hin_orig.
+    assert ( Hh:
+      forall i, In i s -> nth i (binary_seq {| binary_seq := firstn (2 * n) (binary_seq sol) |}) false = nth i (binary_seq sol) false). {
+        intros i Hin_i.
+        apply (range_of_subsets n) in Hin_i; try apply Hin.
+        apply (firstn_preserves (binary_seq sol)).
+        auto.
+      }
+      assert((map
+      (fun i : nat =>
+       if nth i (binary_seq sol) false then 1 else 0)
+      s) = (map
+      (fun i : nat =>
+       if
+        nth i
+          (binary_seq
+             {| binary_seq := firstn (2 * n) (binary_seq sol) |})
+          false
+       then 1
+       else 0) s)). {
+        apply map_ext_in. intros. 
+        replace (nth x (binary_seq sol) false) with(nth x  (binary_seq
+        {| binary_seq := firstn (2 * n) (binary_seq sol) |})
+     false).
+        auto. apply Hh. auto.
+       }
+      rewrite <- H.
+      apply Hin_orig.
+  - (* Length of Binary Sequence *)
+    unfold generate_necklace_instance in *.
+    simpl in *.
+    rewrite firstn_length.
+    lia.
+Qed.
+
 
 Lemma transition_count_last:
   forall l: list bool, let s := length l in
