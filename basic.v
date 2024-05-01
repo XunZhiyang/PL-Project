@@ -221,7 +221,19 @@ Proof.
     + lia.
 Qed.
      
-  
+Lemma transition_count_two_parts_form1: forall seq : list bool, 
+  let s := length seq in
+  s >= 2 -> 
+  transition_count seq = transition_count (firstn (s - 1) seq) + transition_count (skipn (s - 2) seq).
+Proof.
+  intros seq s H.
+  assert (H1: s = length seq) by lia.
+  unfold transition_count.
+  rewrite get_nat_list_two_parts_form1.
+  rewrite sum_nat_list_app.
+  reflexivity.
+  auto.
+Qed.
 
 Lemma get_nat_list_two_parts: forall seq : list bool, 
   let s := length seq in
@@ -560,7 +572,7 @@ Lemma firstn_decrease_transition_count:
   s >= 1 ->  transition_count l >= transition_count (firstn (s-1) l) .
 Proof.
   intros.
-  
+
 Admitted.
 
 
